@@ -15,10 +15,9 @@ red = (255, 0, 0)
 blue = (0, 0, 255)
 green = (0, 255, 0)
 yellow = (255, 255, 0)
-#while True:
-#    temp = sense.temp
-#    pixels = [red if i < temp else blue for i in range(64)]
-#    sense.set_pixels(pixels)
+
+
+gasLevel = array('B',[10,25,75]) # hardcodé just pour tester
 
 def display(gas)-> None:
     global sense
@@ -36,11 +35,6 @@ def display(gas)-> None:
         #sense.clear(green)
         sense.show_message(str(gas), text_colour=green)        
         print(f'{colors.GREEN}Alerte niveau 1!{colors.END}')
-
-gasLevel1 = 30
-gasLevel2 = 20
-gasLevel3 = 75
-gasLevel = array('B',[10,25,75])
 
 
 def Read_gas_level_task():
