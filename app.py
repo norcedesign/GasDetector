@@ -56,13 +56,18 @@ def parse_message(datas: str) -> None:
 
         if data[:3] == b'LG1':
             gas1 = LG1 = int(decoded)
-            print("GAS 1 : ", gas1)
+            print("GAS 1 : ", gas1)#comment this line if necessary
+            Send_alarm_task(gas1)
+
         elif data[:3] == b'LG2':
             gas2 = LG2 = int(decoded)
-            print("GAS 2 : ", gas2)
+            print("GAS 2 : ", gas2)#comment this line if necessary
+            Send_alarm_task(gas2)
+
         elif data[:3] == b'LG3':
             gas3 = LG3 = int(decoded)
-            print("GAS 3 : ", gas3)
+            print("GAS 3 : ", gas3)#comment this line if necessary
+            Send_alarm_task(gas3)
 
 
 def Read_gas_level_task():
@@ -80,7 +85,7 @@ def Read_gas_level_task():
             parse_message(msg)
 
 
-def Send_alarm_task():
+def Send_alarm_task(gasVal):
     global gasLevel
     print('Sending alert ... \n')
     for i in gasLevel:
