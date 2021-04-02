@@ -1,5 +1,5 @@
 # Gas detector
-Application temps réel pour la détection de fuite de gaz en milieu industriel. Cette logiciel développé en pythnon est embarqué sur un Raspberry Pi.
+Application temps réel pour la détection de fuite de gaz en milieu industriel. Cette logiciel développé en Python est embarqué sur un Raspberry Pi.
 
 ## Système de détection
 a) Ce programme détecte la présence de 3 type de gaz (qui peuvent être CO2, CO, O3, CH4, etc.)
