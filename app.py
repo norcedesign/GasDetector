@@ -17,7 +17,7 @@ PORT2: int = 1232  # update to the desired port
 threadLock = threading.Lock()
 #sem = threading.Semaphore()
 
-gaslevel = array('B', [10, 20, 40])
+gaslevel = array('B', [0, 0, 0])
 
 def Send_message(msg):         
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -75,6 +75,3 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
     f1 = executor.submit(Read_gas_level_task)
     f2 = executor.submit(Send_alarm_task)
     f3 = executor.submit(Send_command_task)
-    
-
-

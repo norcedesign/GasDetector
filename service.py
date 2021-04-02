@@ -91,5 +91,3 @@ def parse_message(datas: str) -> None:
     
     print("Gaz level ", glevel, datetime.datetime.now().time())
     #return glevel
-
-      
