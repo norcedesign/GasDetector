@@ -19,18 +19,11 @@ yellow = (255, 255, 0)
 sense = SenseHat()
 sense.clear()
 
-HOST: str = '192.168.1.107'  # update to the desired ip address
-PORT: int = 1234  # update to the desired port
-PORT1: int = 1231  # update to the desired port
-PORT2: int = 1232  # update to the desired port
+#HOST: str = '192.168.1.107'  # update to the desired ip address
+#PORT: int = 1234  # update to the desired port
+#PORT1: int = 1231  # update to the desired port
+#PORT2: int = 1232  # update to the desired port
 
-#gaslevel = array('B', [10,30,60])
-#vide = True
-#plein = False
-#def displayRemote(msg):         
-#    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#        s.connect((HOST, PORT2))
-#        s.sendall(bytes(msg,'utf-8')) #'AG1M\r\nAG2L\r\nAG3H'
 
 def displayAlert(glevel):
     #global sense #, gaslevel    
@@ -60,7 +53,7 @@ def displayAlert(glevel):
     
 #gaslevel = array('B', [10, 30, 60])
 #displayAlert()
-
+"""
 def parse_message(datas: str) -> None:
     # print(datas)
     # b'[LG1XX,LG2YY]'
@@ -90,4 +83,5 @@ def parse_message(datas: str) -> None:
             #Send_alarm_task(gas3)           
     
     print("Gaz level ", glevel, datetime.datetime.now().time())
-    #return glevel
+    return glevel
+    """
