@@ -1,105 +1,184 @@
+import array
+import concurrent.futures
 import sys
 import time
-import socket
-import threading
-#import datetime
-import concurrent.futures
-import service
 
-from array import *
-#from threading import Semaphore, Thread
+from sense_emu import SenseHat
 
-HOST: str = '192.168.1.107'  # update to the desired ip address
-PORT1: int = 1231  # update to the desired port
-PORT2: int = 1232  # update to the desired port
+from colors import colors
+from echo import connect, read_message, send_message
 
-threadLock = threading.Lock()
-#sem = threading.Semaphore()
+sense: SenseHat
+gasLevel: array.array
 
-gaslevel = array('B', [0, 0, 0])
-
-def parse_message(datas: str) -> None:   
-    global gaslevel 
-    #glevel = array('B', [0,0,0])
-    
-    for data in datas:        
-        decoded = data[3:].decode('utf-8')
-
-        if data[:3] == b'LG1':
-            gaslevel[0] = int(decoded)                    
-
-        elif data[:3] == b'LG2':
-            gaslevel[1] = int(decoded)                  
-
-        elif data[:3] == b'LG3':
-            gaslevel[2] = int(decoded)                   
-       # print("Gaz level 123 ", gaslevel, datetime.datetime.now().time())
-    
-
-def Send_message(msg):         
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT2))
-        s.sendall(bytes(msg,'utf-8')) #'AG1M\r\nAG2L\r\nAG3H'  
-
-def Send_command(cmd):         
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT2))
-        s.sendall(bytes(cmd,'utf-8')) #'AG1M\r\nAG2L\r\nAG3H'  
-
-def Read_gas_level_task():
-       
-    print('waiting for server on ...port:' + format(PORT1))   
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT1))
-        while True:
-            data = s.recv(1024)
-            # split socket message into array of consistent progammer readable data
-            # b'LG1XX\r\nLG2YY\r\n' => b'[LG1XX,LG2YY]'
-            msg = data.split(b'\r\n')
-            
-            #with threadLock:
-            #threadLock.acquire()          
-            parse_message(msg) #gaslevel = service.parse_message(msg)            
-            print(f'T1 - Reading gaz level : {msg}' )            
-            #threadLock.release()
-            
-            #print(f'T1 - Reading gaz level read : {msg}' ) # + str(gaslevel).strip('[]'))
-            time.sleep(1)
+HOST: str = 'localhost'  # update to the desired ip address
+READ_PORT: int = 1231  # update to the desired port
+WRITE_PORT: int = 1232  # update to the desired port
 
 
-def Send_command_task():
-    global gaslevel
-    
-    # To do
-    # depending on gasLevel value send the appropriate command
-    cmd = 'VL1\r\n' #'IG2\r\nIG3\r\nIG1\r\n'  'AL1\r\n'
-    
+def read_gas_level() -> None:
+    global gasLevel
+
     while True:
-        #if max(gaslevel) > 5:
-        Send_command(cmd)
-        print(f'T2 - Sending command: {cmd}')
+        message = read_message()
+
+        if message:
+            data = message.splitlines()
+
+            print(f'{colors.CYAN}T1 - Reading gas level : {data}{colors.END}')
+            parse_message_data(data)
+
+        time.sleep(1)
+
+
+def parse_message_data(data: [str]) -> None:
+    global gasLevel
+
+    for datum in data:
+        value = int(datum[3:])
+
+        if datum[:3] == 'LG1':
+            gasLevel[0] = value
+
+        elif datum[:3] == 'LG2':
+            gasLevel[1] = value
+
+        elif datum[:3] == 'LG3':
+            gasLevel[2] = value
+
+
+def send_command() -> None:
+    while True:
+        cmd = get_command()
+
+        if cmd:
+            print(f'{colors.CYAN}T2 - Sending command: {cmd}{colors.END}')
+            send_message(cmd)
+
         time.sleep(1.2)
-        
-    #To do    
-    # if gasLevel value = 0 send appropriate command to Cancel previous command
 
 
-def Send_alarm_task():
-    global gaslevel    
-    
+def get_command() -> str:
+    global gasLevel
+
+    cmd = ''
+    controlled = True
+
+    for index, level in enumerate(gasLevel):
+        if level >= 5:
+            controlled = False
+            
+        if level <= 30:
+            cmd += 'AIG' + str(index + 1) + '\r\n'
+
+        if 5 < level <= 10:
+            cmd += 'AL1' + '\r\n'
+            cmd += 'VL1' + '\r\n'
+
+        elif 10 < level <= 15:
+            cmd += 'AL2' + '\r\n'
+            cmd += 'VL1' + '\r\n'
+
+        elif 15 < level <= 20:
+            cmd += 'AL2' + '\r\n'
+            cmd += 'VL2' + '\r\n'
+
+        elif 20 < level <= 30:
+            cmd += 'AL3' + '\r\n'
+            cmd += 'VL2' + '\r\n'
+
+        elif 30 < level <= 60:
+            cmd += 'AL3' + '\r\n'
+            cmd += 'VL2' + '\r\n'
+
+        elif 60 < level <= 100:
+            cmd += 'AL3' + '\r\n'
+            cmd += 'VL2' + '\r\n'
+            cmd += 'IG' + str(index + 1) + '\r\n'
+
+    if controlled:
+        cmd += 'VN' + '\r\n'
+
+    return cmd
+
+
+def send_alarm() -> None:
     while True:
-        #with threadLock:
-        #threadLock.acquire()
-        alert = service.displayAlert(gaslevel)
+        alert = display_alert()
+
         if alert:
-            print(f'T3 - Sending alert: {alert}')
-            #Send_message(alert)
-        #threadLock.release()
-        #service.displayAlert(gaslevel)
-        time.sleep(2)     
+            print(f'{colors.CYAN}T3 - Sending alert: {alert}{colors.END}')
+            send_message(alert)
+
+        time.sleep(2)
 
 
-with concurrent.futures.ThreadPoolExecutor() as executor:
-    f1 = executor.submit(Read_gas_level_task)    
-    f2 = executor.submit(Send_command_task)
-    f3 = executor.submit(Send_alarm_task)
+def display_alert() -> str:
+    global gasLevel
+    message = ''
+
+    for index, level in enumerate(gasLevel):
+        if level >= 50:
+            print(f'{colors.RED}Alerte niveau 3!{colors.END}')
+            message += 'AG' + str(index + 1) + 'H' + '\r\n'
+
+        elif 50 > level >= 21:
+            print(f'{colors.YELLOW}Alerte niveau 2!{colors.END}')
+            message += 'AG' + str(index + 1) + 'M' + '\r\n'
+
+        elif 21 > level > 5:
+            print(f'{colors.GREEN}Alerte niveau 1!{colors.END}')
+            message += 'AG' + str(index + 1) + 'L' + '\r\n'
+
+        elif 5 > level >= 0:
+            print(f'{colors.CYAN}Aucune alerte!{colors.END}')
+            message += 'AG' + str(index + 1) + '' + '\r\n'
+
+    return message
+
+
+def show_level() -> None:
+    global gasLevel
+
+    while True:
+        alert = 'L'
+        color = 'green'
+
+        for index, level in enumerate(gasLevel):
+            if level >= 50:
+                alert = 'H'
+                color = 'red'
+
+            elif 50 > level >= 21 and alert != 'H':
+                alert = 'M'
+                color = 'yellow'
+
+        sense.set_pixels([[0, 0, 0]] * 64)
+        time.sleep(0.02)
+
+        sense.show_letter(alert, text_colour=colors.RGB[color])
+        time.sleep(1.4)
+
+
+def main() -> None:
+    global sense, gasLevel
+
+    sense = SenseHat()
+    sense.clear()
+
+    gasLevel = array.array('B', [0, 0, 0])
+    connect(HOST, READ_PORT, WRITE_PORT)
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.submit(read_gas_level)
+        executor.submit(send_command)
+        executor.submit(send_alarm)
+        executor.submit(show_level)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except:
+        print(f'{colors.GREEN}\nExiting application\n{colors.END}')
+        sys.exit(0)
