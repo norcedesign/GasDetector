@@ -3,10 +3,9 @@ import concurrent.futures
 import sys
 import time
 
-from sense_emu import SenseHat
-
 from colors import colors
 from echo import connect, read_message, send_message
+from sense_emu import SenseHat
 
 sense: SenseHat
 gasLevel: array.array
@@ -67,7 +66,7 @@ def get_command() -> str:
     for index, level in enumerate(gasLevel):
         if level >= 5:
             controlled = False
-            
+
         if level <= 30:
             cmd += 'AIG' + str(index + 1) + '\r\n'
 
@@ -83,11 +82,7 @@ def get_command() -> str:
             cmd += 'AL2' + '\r\n'
             cmd += 'VL2' + '\r\n'
 
-        elif 20 < level <= 30:
-            cmd += 'AL3' + '\r\n'
-            cmd += 'VL2' + '\r\n'
-
-        elif 30 < level <= 60:
+        elif 20 < level <= 60:
             cmd += 'AL3' + '\r\n'
             cmd += 'VL2' + '\r\n'
 
@@ -118,19 +113,19 @@ def display_alert() -> str:
     message = ''
 
     for index, level in enumerate(gasLevel):
-        if level >= 50:
+        if 100 >= level > 50:
             print(f'{colors.RED}Alerte niveau 3!{colors.END}')
             message += 'AG' + str(index + 1) + 'H' + '\r\n'
 
-        elif 50 > level >= 21:
+        elif 50 >= level > 20:
             print(f'{colors.YELLOW}Alerte niveau 2!{colors.END}')
             message += 'AG' + str(index + 1) + 'M' + '\r\n'
 
-        elif 21 > level > 5:
+        elif 20 >= level > 5:
             print(f'{colors.GREEN}Alerte niveau 1!{colors.END}')
             message += 'AG' + str(index + 1) + 'L' + '\r\n'
 
-        elif 5 > level >= 0:
+        elif 5 >= level >= 0:
             print(f'{colors.CYAN}Aucune alerte!{colors.END}')
             message += 'AG' + str(index + 1) + '' + '\r\n'
 
@@ -145,11 +140,11 @@ def show_level() -> None:
         color = 'green'
 
         for index, level in enumerate(gasLevel):
-            if level >= 50:
+            if 100 >= level > 50:
                 alert = 'H'
                 color = 'red'
 
-            elif 50 > level >= 21 and alert != 'H':
+            elif 50 >= level > 20 and alert != 'H':
                 alert = 'M'
                 color = 'yellow'
 
