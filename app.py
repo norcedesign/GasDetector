@@ -52,7 +52,7 @@ def send_command() -> None:
         cmd = get_command()
 
         if cmd:
-            print(f'{colors.CYAN}T2 - Sending command: {cmd}{colors.END}')
+            print(f'{colors.CYAN}T2 - Sending command: {cmd.splitlines()}{colors.END}')
             send_message(cmd)
 
         time.sleep(1.2)
@@ -107,7 +107,7 @@ def send_alarm() -> None:
         alert = display_alert()
 
         if alert:
-            print(f'{colors.CYAN}T3 - Sending alert: {alert}{colors.END}')
+            print(f'{colors.CYAN}T3 - Sending alert: {alert.splitlines()}{colors.END}')
             send_message(alert)
 
         time.sleep(2)
