@@ -1,8 +1,8 @@
 import array
 import concurrent.futures
 import sys
-import time
 import threading
+import time
 
 from colors import colors
 from echo import connect, read_message, send_message
@@ -19,6 +19,7 @@ producer_lock = threading.Lock()
 consumer_lock = threading.Lock()
 consumer_lock.acquire()
 
+
 def read_gas_level() -> None:
     global gasLevel
 
@@ -27,14 +28,13 @@ def read_gas_level() -> None:
 
         if message:
             data = message.splitlines()
-
             print(f'{colors.CYAN}T1 - Reading gas level : {data}{colors.END}')
+
             producer_lock.acquire()
-            #this method write values into gasLevel
-            parse_message_data(data)
+            parse_message_data(data)  # this method write values into gasLevel
             consumer_lock.release()
 
-        time.sleep(5)
+        time.sleep(0.5)
 
 
 def parse_message_data(data: [str]) -> None:
@@ -56,14 +56,14 @@ def parse_message_data(data: [str]) -> None:
 def send_command() -> None:
     while True:
         consumer_lock.acquire()
-        #this method read values from gasLevel
-        cmd = get_command()
+        cmd = get_command()  # this method read values from gasLevel
         producer_lock.release()
+
         if cmd:
             print(f'{colors.CYAN}T2 - Sending command: {cmd.splitlines()}{colors.END}')
             send_message(cmd)
 
-        time.sleep(6)
+        time.sleep(0.6)
 
 
 def get_command() -> str:
@@ -114,7 +114,7 @@ def send_alarm() -> None:
             print(f'{colors.CYAN}T3 - Sending alert: {alert.splitlines()}{colors.END}')
             send_message(alert)
 
-        time.sleep(10)
+        time.sleep(1)
 
 
 def display_alert() -> str:
@@ -158,11 +158,12 @@ def show_level() -> None:
                 color = 'yellow'
 
         sense.set_pixels([[0, 0, 0]] * 64)
-        time.sleep(0.02)      
+        time.sleep(0.02)
 
         sense.show_letter(alert, text_colour=colors.RGB[color])
         print(f'{colors.CYAN}T4 - Displaying local alert: {alert}{colors.END}')
-        time.sleep(15)
+
+        time.sleep(1.5)
 
 
 def main() -> None:
