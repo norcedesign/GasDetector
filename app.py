@@ -2,6 +2,7 @@ import array
 import concurrent.futures
 import sys
 import time
+import threading
 
 from colors import colors
 from echo import connect, read_message, send_message
@@ -14,6 +15,9 @@ HOST: str = 'localhost'  # update to the desired ip address
 READ_PORT: int = 1231  # update to the desired port
 WRITE_PORT: int = 1232  # update to the desired port
 
+producer_lock = threading.Lock()
+consumer_lock = threading.Lock()
+consumer_lock.acquire()
 
 def read_gas_level() -> None:
     global gasLevel
@@ -25,9 +29,12 @@ def read_gas_level() -> None:
             data = message.splitlines()
 
             print(f'{colors.CYAN}T1 - Reading gas level : {data}{colors.END}')
+            producer_lock.acquire()
+            #this method write values into gasLevel
             parse_message_data(data)
+            consumer_lock.release()
 
-        time.sleep(1)
+        time.sleep(5)
 
 
 def parse_message_data(data: [str]) -> None:
@@ -48,13 +55,15 @@ def parse_message_data(data: [str]) -> None:
 
 def send_command() -> None:
     while True:
+        consumer_lock.acquire()
+        #this method read values from gasLevel
         cmd = get_command()
-
+        producer_lock.release()
         if cmd:
             print(f'{colors.CYAN}T2 - Sending command: {cmd.splitlines()}{colors.END}')
             send_message(cmd)
 
-        time.sleep(1.2)
+        time.sleep(6)
 
 
 def get_command() -> str:
@@ -105,7 +114,7 @@ def send_alarm() -> None:
             print(f'{colors.CYAN}T3 - Sending alert: {alert.splitlines()}{colors.END}')
             send_message(alert)
 
-        time.sleep(2)
+        time.sleep(10)
 
 
 def display_alert() -> str:
@@ -149,10 +158,11 @@ def show_level() -> None:
                 color = 'yellow'
 
         sense.set_pixels([[0, 0, 0]] * 64)
-        time.sleep(0.02)
+        time.sleep(0.02)      
 
         sense.show_letter(alert, text_colour=colors.RGB[color])
-        time.sleep(1.4)
+        print(f'{colors.CYAN}T4 - Displaying local alert: {alert}{colors.END}')
+        time.sleep(15)
 
 
 def main() -> None:
@@ -175,5 +185,6 @@ if __name__ == '__main__':
     try:
         main()
     except:
+        print(f'{colors.RED}\nSocket server is not running.{colors.END}')
         print(f'{colors.GREEN}\nExiting application\n{colors.END}')
         sys.exit(0)
